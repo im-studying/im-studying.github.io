@@ -126,13 +126,28 @@
         
         #letter {
             display: flex;
-            justify-content: center;
+            flex-direction: column;
             align-items: center;
+            justify-content: flex-start;
+            overflow-y: auto;
+            -webkit-overflow-scrolling: touch;
+            padding: 20px 0;
+        }
+        
+        #letterContainer {
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            -webkit-overflow-scrolling: touch;
         }
         
         #letter img {
-            max-width: 95%;
-            max-height: 90vh;
+            width: 95%;
+            max-width: 1018px;
             object-fit: contain;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
             border-radius: 8px;
@@ -157,6 +172,23 @@
         
         .hidden {
             display: none !important;
+        }
+        
+        .scrollIndicator {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 24px;
+            animation: bounce 2s infinite;
+            opacity: 0.7;
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 50%, 80%, 100% {transform: translateY(0) translateX(-50%);}
+            40% {transform: translateY(-20px) translateX(-50%);}
+            60% {transform: translateY(-10px) translateX(-50%);}
         }
     </style>
 </head>
@@ -184,7 +216,10 @@
         </section>
         
         <section id="letter" class="section">
-            <img src="./image/letter.png" alt="信">
+            <div id="letterContainer">
+                <img src="./image/letter.png" alt="信">
+            </div>
+            <div class="scrollIndicator">↕️</div>
         </section>
     </div>
     
@@ -198,6 +233,8 @@
             const coverSection = document.getElementById('cover');
             const contentSection = document.getElementById('content');
             const letterSection = document.getElementById('letter');
+            const letterContainer = document.getElementById('letterContainer');
+            const scrollIndicator = document.querySelector('.scrollIndicator');
             const coverBtn = document.getElementById('coverBtn');
             const videoContainer = document.getElementById('videoContainer');
             const videoPlayer = document.getElementById('videoPlayer');
@@ -213,6 +250,10 @@
             let isMusicPlaying = false;
             
             bgMusicBtn.addEventListener('click', function() {
+                toggleMusic();
+            });
+            
+            function toggleMusic() {
                 if (isMusicPlaying) {
                     backgroundMusic.pause();
                     bgMusicBtn.textContent = '🔈';
@@ -221,7 +262,15 @@
                     bgMusicBtn.textContent = '🔊';
                 }
                 isMusicPlaying = !isMusicPlaying;
-            });
+            }
+            
+            function pauseMusic() {
+                if (isMusicPlaying) {
+                    backgroundMusic.pause();
+                    bgMusicBtn.textContent = '🔈';
+                    isMusicPlaying = false;
+                }
+            }
             
             // 从封面到视频部分
             coverBtn.addEventListener('click', function() {
@@ -239,6 +288,8 @@
             // 视频控制
             videoBtn.addEventListener('click', function() {
                 videoBtn.classList.add('hidden');
+                // 视频播放时暂停背景音乐
+                pauseMusic();
                 videoPlayer.play().catch(e => console.log('无法自动播放视频:', e));
             });
             
@@ -251,6 +302,21 @@
             videoEndBtn.addEventListener('click', function() {
                 contentSection.classList.remove('active');
                 letterSection.classList.add('active');
+                
+                // 继续播放背景音乐
+                if (!isMusicPlaying) {
+                    backgroundMusic.play().catch(e => console.log('无法自动播放音乐:', e));
+                    isMusicPlaying = true;
+                    bgMusicBtn.textContent = '🔊';
+                }
+                
+                // 3秒后隐藏滚动指示器
+                setTimeout(() => {
+                    scrollIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollIndicator.style.display = 'none';
+                    }, 1000);
+                }, 3000);
             });
             
             // 处理微信浏览器中的音频播放限制
@@ -277,6 +343,16 @@
                     bgMusicBtn.textContent = '🔊';
                 }
             }, {once: true});
+            
+            // 监听信件滚动以隐藏滚动指示器
+            letterContainer.addEventListener('scroll', function() {
+                if (scrollIndicator.style.opacity !== '0') {
+                    scrollIndicator.style.opacity = '0';
+                    setTimeout(() => {
+                        scrollIndicator.style.display = 'none';
+                    }, 1000);
+                }
+            });
         });
     </script>
 </body>
